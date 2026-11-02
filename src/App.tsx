@@ -1,6 +1,6 @@
 /**
- * FR SHAH SMART CLIPBOARD MANAGER
- * FR SHAH QuickPanel Root Application
+ * FR SHAH QuickPanel · Build. Control. Customize.
+ * Master Application Root (Industrial Black & Grey Monochrome)
  * DEVELOPER CREDIT: MADE BY FR SHAH
  */
 
@@ -12,21 +12,45 @@ import {
   ContentType, 
   SortOption 
 } from './types/clipboard';
+import { 
+  ToolDefinition, 
+  ToolId, 
+  QuickPanelCustomization, 
+  PermissionStatus, 
+  PermissionId 
+} from './types/quickpanel';
 import { roomDb } from './db/roomDatabase';
 import { androidClipboard } from './utils/clipboardManager';
-import { Header } from './components/Header';
-import { QuickPanelDashboard } from './components/QuickPanelDashboard';
+import { quickPanelStorage } from './db/quickpanelStorage';
+
+// Top Navigation & Components
+import { Header, MainNavView } from './components/Header';
+import { DashboardView } from './components/DashboardView';
 import { ClipboardCard } from './components/ClipboardCard';
 import { ClipboardPreviewModal } from './components/ClipboardPreviewModal';
 import { NewClipModal } from './components/NewClipModal';
 import { EditClipModal } from './components/EditClipModal';
-import { EdgePanel } from './components/EdgePanel';
-import { FloatingPanel } from './components/FloatingPanel';
-import { CollectionsManager } from './components/CollectionsManager';
-import { SettingsModal } from './components/SettingsModal';
+import { FloatingQuickPanelButton } from './components/FloatingQuickPanelButton';
+import { EdgePanelDrawer } from './components/EdgePanelDrawer';
 import { RoomInspector } from './components/RoomInspector';
 import { TestSimulationSuite } from './components/TestSimulationSuite';
 import { AndroidPrivacyChip } from './components/AndroidPrivacyChip';
+import { CustomizationModal } from './components/CustomizationModal';
+import { PermissionsManagerModal } from './components/PermissionsManagerModal';
+import { AndroidSourceModal } from './components/AndroidSourceModal';
+
+// Dedicated Tool Components
+import { CalculatorTool } from './components/tools/CalculatorTool';
+import { StopwatchTool } from './components/tools/StopwatchTool';
+import { FlashlightTool } from './components/tools/FlashlightTool';
+import { VolumeBrightnessTool } from './components/tools/VolumeBrightnessTool';
+import { ScreenshotTool } from './components/tools/ScreenshotTool';
+import { ScreenRecorderTool } from './components/tools/ScreenRecorderTool';
+import { QuickNotesTool } from './components/tools/QuickNotesTool';
+import { QrScannerTool } from './components/tools/QrScannerTool';
+import { AppShortcutsTool } from './components/tools/AppShortcutsTool';
+
+// Icons
 import { 
   Search, 
   Pin, 
@@ -36,7 +60,6 @@ import {
   Square, 
   Trash2, 
   FolderInput, 
-  Layers, 
   X,
   ClipboardList,
   Sparkles,
@@ -44,17 +67,24 @@ import {
   Mail,
   Phone,
   Code2,
-  FileText
+  FileText,
+  Sliders,
+  ChevronLeft
 } from 'lucide-react';
 
 export default function App() {
+  // Navigation State
+  const [currentView, setCurrentView] = useState<MainNavView>('dashboard');
+
+  // Persistence State
   const [entries, setEntries] = useState<ClipboardEntry[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [settings, setSettings] = useState<ClipboardSettings>(() => roomDb.getSettings());
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [currentView, setCurrentView] = useState<'history' | 'collections' | 'inspector' | 'test_suite'>('history');
+  const [clipboardSettings, setClipboardSettings] = useState<ClipboardSettings>(() => roomDb.getSettings());
+  const [tools, setTools] = useState<ToolDefinition[]>(() => quickPanelStorage.getTools());
+  const [customization, setCustomization] = useState<QuickPanelCustomization>(() => quickPanelStorage.getCustomization());
+  const [permissions, setPermissions] = useState<PermissionStatus[]>(() => quickPanelStorage.getPermissions());
 
-  // Search & Filtering State
+  // Search & Filtering (for Clipboard view)
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<ContentType | 'all'>('all');
   const [collectionFilter, setCollectionFilter] = useState<string | 'all'>('all');
@@ -62,42 +92,46 @@ export default function App() {
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
-  // Multi-Select Mode
+  // Multi-Select Mode (for Clipboard)
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // Panels & Modals State
+  // Modals & Drawers State
   const [previewEntry, setPreviewEntry] = useState<ClipboardEntry | null>(null);
   const [editEntry, setEditEntry] = useState<ClipboardEntry | null>(null);
   const [isNewClipOpen, setIsNewClipOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
+  const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
+  const [isAndroidSourceOpen, setIsAndroidSourceOpen] = useState(false);
   const [isEdgeOpen, setIsEdgeOpen] = useState(false);
-  const [isFloatingOpen, setIsFloatingOpen] = useState(false);
+  const [isFloatingOpen, setIsFloatingOpen] = useState(true);
 
-  // Synchronize state from Room Database
+  // Reload clipboard entries from Room DB
   const reloadFromDb = useCallback(() => {
     setEntries(roomDb.getAllEntries());
     setCollections(roomDb.getAllCollections());
-    setSettings(roomDb.getSettings());
+    setClipboardSettings(roomDb.getSettings());
+    setTools(quickPanelStorage.getTools());
+    setCustomization(quickPanelStorage.getCustomization());
+    setPermissions(quickPanelStorage.getPermissions());
   }, []);
 
-  // Initial load
   useEffect(() => {
     reloadFromDb();
   }, [reloadFromDb]);
 
-  // Sync dark class on document element
+  // Sync theme
   useEffect(() => {
-    if (theme === 'dark') {
+    if (customization.theme === 'dark' || (customization.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [theme]);
+  }, [customization.theme]);
 
-  // Subscribe to Android Clipboard service
+  // Foreground clipboard sync
   useEffect(() => {
-    androidClipboard.setAutoCapture(settings.autoCapture);
+    androidClipboard.setAutoCapture(clipboardSettings.autoCapture);
 
     const unsubscribe = androidClipboard.subscribe((event) => {
       try {
@@ -117,21 +151,16 @@ export default function App() {
     });
 
     return unsubscribe;
-  }, [settings.autoCapture, reloadFromDb]);
+  }, [clipboardSettings.autoCapture, reloadFromDb]);
 
-  // Theme toggle
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  // Copy handler
-  const handleCopy = useCallback(async (entry: ClipboardEntry) => {
+  // Copy clip
+  const handleCopyClip = useCallback(async (entry: ClipboardEntry) => {
     await androidClipboard.copyToClipboard(entry.content, entry.contentType.toUpperCase());
     roomDb.incrementCopyCount(entry.id);
     reloadFromDb();
   }, [reloadFromDb]);
 
-  // Pin & Favorite toggles
+  // Clipboard Actions
   const handleTogglePin = (id: string) => {
     roomDb.togglePin(id);
     reloadFromDb();
@@ -142,7 +171,6 @@ export default function App() {
     reloadFromDb();
   };
 
-  // Delete single
   const handleDeleteEntry = (id: string) => {
     roomDb.deleteEntry(id);
     if (selectedIds.has(id)) {
@@ -153,20 +181,15 @@ export default function App() {
     reloadFromDb();
   };
 
-  // Multi-select toggle
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
-  // Multi-select bulk actions
   const handleSelectAll = (filteredList: ClipboardEntry[]) => {
     if (selectedIds.size === filteredList.length) {
       setSelectedIds(new Set());
@@ -191,29 +214,19 @@ export default function App() {
     reloadFromDb();
   };
 
-  // Share action (using Web Share API or fallback)
-  const handleShare = async (entry: ClipboardEntry) => {
+  const handleShareClip = async (entry: ClipboardEntry) => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'FR SHAH QuickPanel Clip',
           text: entry.content,
         });
-      } catch {
-        // User cancelled share
-      }
+      } catch {}
     } else {
-      await handleCopy(entry);
+      await handleCopyClip(entry);
     }
   };
 
-  // Move to collection
-  const handleMoveToCollection = (id: string, colId: string | null) => {
-    roomDb.updateEntry(id, { collectionId: colId });
-    reloadFromDb();
-  };
-
-  // Save new clip
   const handleSaveNewClip = (
     content: string,
     options?: { collectionId?: string | null; tags?: string[]; isPinned?: boolean; forceSaveSensitive?: boolean }
@@ -231,43 +244,37 @@ export default function App() {
     reloadFromDb();
   };
 
-  // Edit save
-  const handleSaveEdit = (id: string, updates: Partial<ClipboardEntry>) => {
-    roomDb.updateEntry(id, updates);
-    reloadFromDb();
+  // Customization & Permissions updates
+  const handleSaveCustomization = (newCust: QuickPanelCustomization) => {
+    quickPanelStorage.saveCustomization(newCust);
+    setCustomization(newCust);
   };
 
-  // Manual device clipboard read
-  const handleManualCapture = async () => {
-    const text = await androidClipboard.checkForegroundClipboard();
-    if (!text && navigator.clipboard?.readText) {
-      try {
-        const manual = await navigator.clipboard.readText();
-        if (manual) {
-          roomDb.insertEntry(manual);
-          androidClipboard.notifyPrivacyToast('Synced device clipboard', manual.slice(0, 36), 'capture');
-          reloadFromDb();
-        }
-      } catch {
-        setIsNewClipOpen(true);
-      }
-    } else {
-      reloadFromDb();
-    }
+  const handleToggleTool = (id: ToolId, enabled: boolean) => {
+    quickPanelStorage.setToolEnabled(id, enabled);
+    setTools(quickPanelStorage.getTools());
   };
 
-  // Automatic cleanup trigger
-  const handleRetentionCleanup = () => {
-    const count = roomDb.cleanupExpired(settings.retentionPeriod === 'never' ? '30d' : settings.retentionPeriod);
-    androidClipboard.notifyPrivacyToast(`Retention cleanup: purged ${count} expired items`, undefined, 'warning');
-    reloadFromDb();
+  const handleReorderTools = (orderIds: ToolId[]) => {
+    quickPanelStorage.reorderTools(orderIds);
+    setTools(quickPanelStorage.getTools());
   };
 
-  // Filtered & Sorted Entries
+  const handleResetDefaults = () => {
+    const def = quickPanelStorage.resetCustomizationToDefault();
+    setCustomization(def);
+    setTools(quickPanelStorage.getTools());
+  };
+
+  const handleTogglePermission = (id: PermissionId, granted: boolean) => {
+    quickPanelStorage.setPermissionGranted(id, granted);
+    setPermissions(quickPanelStorage.getPermissions());
+  };
+
+  // Filtered Clipboard list
   const filteredEntries = useMemo(() => {
     let list = [...entries];
 
-    // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       list = list.filter((e) => {
@@ -280,57 +287,40 @@ export default function App() {
       });
     }
 
-    // Type filter
     if (typeFilter !== 'all') {
       list = list.filter((e) => e.contentType === typeFilter);
     }
 
-    // Collection filter
     if (collectionFilter !== 'all') {
       list = list.filter((e) => e.collectionId === collectionFilter);
     }
 
-    // Only pinned
     if (onlyPinned) {
       list = list.filter((e) => e.isPinned);
     }
 
-    // Only favorites
     if (onlyFavorites) {
       list = list.filter((e) => e.isFavorite);
     }
 
-    // Sorting
     list.sort((a, b) => {
-      // If default newest-first: pinned items always float to the top
       if (sortBy === 'newest') {
         if (a.isPinned && !b.isPinned) return -1;
         if (!a.isPinned && b.isPinned) return 1;
         return b.createdAt - a.createdAt;
       }
-      if (sortBy === 'oldest') {
-        return a.createdAt - b.createdAt;
-      }
-      if (sortBy === 'alphabetical') {
-        return a.content.localeCompare(b.content);
-      }
-      if (sortBy === 'most_copied') {
-        return b.copyCount - a.copyCount;
-      }
+      if (sortBy === 'oldest') return a.createdAt - b.createdAt;
+      if (sortBy === 'alphabetical') return a.content.localeCompare(b.content);
+      if (sortBy === 'most_copied') return b.copyCount - a.copyCount;
       return 0;
     });
 
     return list;
   }, [entries, searchQuery, typeFilter, collectionFilter, onlyPinned, onlyFavorites, sortBy]);
 
-  // KPI metrics
-  const pinnedCount = useMemo(() => entries.filter((e) => e.isPinned).length, [entries]);
-  const favoriteCount = useMemo(() => entries.filter((e) => e.isFavorite).length, [entries]);
-  const dbStats = useMemo(() => roomDb.getDatabaseStats(), [entries]);
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
-      {/* Top Bar following design contract */}
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans transition-colors duration-200 selection:bg-zinc-700 selection:text-white">
+      {/* Top Bar Navigation */}
       <Header
         currentView={currentView}
         onViewChange={(v) => {
@@ -338,71 +328,88 @@ export default function App() {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
         onOpenNewClip={() => setIsNewClipOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenCustomization={() => setIsCustomizationOpen(true)}
+        onOpenPermissions={() => setIsPermissionsOpen(true)}
+        onOpenAndroidSource={() => setIsAndroidSourceOpen(true)}
         onToggleEdgePanel={() => setIsEdgeOpen(!isEdgeOpen)}
         onToggleFloatingPanel={() => setIsFloatingOpen(!isFloatingOpen)}
-        theme={theme}
-        onToggleTheme={toggleTheme}
+        theme={customization.theme === 'light' ? 'light' : 'dark'}
+        onToggleTheme={() => {
+          const next = customization.theme === 'dark' ? 'light' : 'dark';
+          handleSaveCustomization({ ...customization, theme: next });
+        }}
         isEdgeOpen={isEdgeOpen}
         isFloatingOpen={isFloatingOpen}
       />
 
-      {/* Main Content Area */}
+      {/* Main View Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
-        {/* QuickPanel Status Banner & Command Strip */}
-        <QuickPanelDashboard
-          totalCount={entries.length}
-          pinnedCount={pinnedCount}
-          favoriteCount={favoriteCount}
-          storageFormatted={dbStats.storageFormatted}
-          settings={settings}
-          onManualCaptureFromSystem={handleManualCapture}
-          onTriggerCleanup={handleRetentionCleanup}
-          onToggleEdgePanel={() => setIsEdgeOpen(!isEdgeOpen)}
-          onToggleFloatingPanel={() => setIsFloatingOpen(!isFloatingOpen)}
-          isEdgeOpen={isEdgeOpen}
-          isFloatingOpen={isFloatingOpen}
-        />
+        
+        {/* Navigation Breadcrumb when viewing an individual tool */}
+        {currentView !== 'dashboard' && (
+          <div className="mb-4 flex items-center justify-between">
+            <button
+              onClick={() => setCurrentView('dashboard')}
+              className="text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors p-1 -ml-1 rounded-lg hover:bg-zinc-900"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back to Dashboard</span>
+            </button>
 
-        {/* VIEW 1: Clipboard History & Clips */}
-        {currentView === 'history' && (
+            <span className="text-[11px] font-mono text-zinc-500 uppercase">
+              FR SHAH QuickPanel · {currentView.replace('_', ' ')}
+            </span>
+          </div>
+        )}
+
+        {/* 1. MASTER DASHBOARD VIEW */}
+        {currentView === 'dashboard' && (
+          <DashboardView
+            tools={tools}
+            customization={customization}
+            onSelectTool={(v) => setCurrentView(v)}
+            onOpenCustomization={() => setIsCustomizationOpen(true)}
+            onOpenPermissions={() => setIsPermissionsOpen(true)}
+          />
+        )}
+
+        {/* 2. SMART CLIPBOARD MANAGER VIEW */}
+        {currentView === 'clipboard' && (
           <div className="space-y-4">
-            {/* Search & Filter Bar (Interactive Buttons & Segmented Controls) */}
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            {/* Search & Filter Toolbar */}
+            <div className="p-4 rounded-3xl bg-zinc-900 border border-zinc-800 shadow-sm space-y-3">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                {/* Search Input */}
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search clipboard history by text, domain, or #tag..."
-                    className="w-full pl-10 pr-9 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Search clipboard history by text, URL domain, or #tag..."
+                    className="w-full pl-10 pr-9 py-2 text-xs sm:text-sm rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
 
-                {/* Sort Option & Multi-Select Toggle */}
                 <div className="flex items-center gap-2 shrink-0">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-semibold text-zinc-300">
+                    <ArrowUpDown className="w-3.5 h-3.5 text-zinc-500" />
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as SortOption)}
                       className="bg-transparent focus:outline-none cursor-pointer"
                     >
-                      <option value="newest" className="dark:bg-slate-900">Newest First</option>
-                      <option value="oldest" className="dark:bg-slate-900">Oldest First</option>
-                      <option value="most_copied" className="dark:bg-slate-900">Most Copied</option>
-                      <option value="alphabetical" className="dark:bg-slate-900">Alphabetical (A-Z)</option>
+                      <option value="newest" className="bg-zinc-900">Newest First</option>
+                      <option value="oldest" className="bg-zinc-900">Oldest First</option>
+                      <option value="most_copied" className="bg-zinc-900">Most Copied</option>
+                      <option value="alphabetical" className="bg-zinc-900">Alphabetical (A-Z)</option>
                     </select>
                   </div>
 
@@ -413,8 +420,8 @@ export default function App() {
                     }}
                     className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                       isMultiSelect
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        ? 'bg-zinc-100 text-zinc-950 border-zinc-100'
+                        : 'border-zinc-800 text-zinc-300 hover:bg-zinc-800'
                     }`}
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
@@ -423,37 +430,36 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Filter Tabs / Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
-                {/* Content Category Filters */}
+              {/* Category Segmented Controls */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-800">
                 <div className="flex flex-wrap items-center gap-1 text-xs">
                   <button
                     onClick={() => setTypeFilter('all')}
                     className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
                       typeFilter === 'all'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-zinc-100 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                     }`}
                   >
-                    All Types
+                    All
                   </button>
                   <button
                     onClick={() => setTypeFilter('url')}
                     className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-colors ${
                       typeFilter === 'url'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-zinc-100 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                     }`}
                   >
                     <Link className="w-3.5 h-3.5" />
-                    <span>URLs</span>
+                    <span>Links</span>
                   </button>
                   <button
                     onClick={() => setTypeFilter('code')}
                     className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-colors ${
                       typeFilter === 'code'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-zinc-100 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                     }`}
                   >
                     <Code2 className="w-3.5 h-3.5" />
@@ -463,8 +469,8 @@ export default function App() {
                     onClick={() => setTypeFilter('email')}
                     className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-colors ${
                       typeFilter === 'email'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-zinc-100 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                     }`}
                   >
                     <Mail className="w-3.5 h-3.5" />
@@ -474,19 +480,19 @@ export default function App() {
                     onClick={() => setTypeFilter('phone')}
                     className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-colors ${
                       typeFilter === 'phone'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-zinc-100 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                     }`}
                   >
                     <Phone className="w-3.5 h-3.5" />
-                    <span>Phones</span>
+                    <span>Phone</span>
                   </button>
                   <button
                     onClick={() => setTypeFilter('plain_text')}
                     className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition-colors ${
                       typeFilter === 'plain_text'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-zinc-100 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -494,75 +500,41 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Pin & Star Fast Filter Toggles */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setOnlyPinned(!onlyPinned)}
                     className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors ${
                       onlyPinned
-                        ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40'
-                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                        ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
+                        : 'text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
-                    <Pin className={`w-3.5 h-3.5 ${onlyPinned ? 'fill-amber-500' : ''}`} />
-                    <span>Pinned ({pinnedCount})</span>
+                    <Pin className={`w-3.5 h-3.5 ${onlyPinned ? 'fill-amber-400' : ''}`} />
+                    <span>Pinned ({entries.filter((e) => e.isPinned).length})</span>
                   </button>
 
                   <button
                     onClick={() => setOnlyFavorites(!onlyFavorites)}
                     className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors ${
                       onlyFavorites
-                        ? 'bg-pink-500/20 text-pink-600 dark:text-pink-400 border border-pink-500/40'
-                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                        ? 'bg-rose-400/20 text-rose-300 border border-rose-400/40'
+                        : 'text-zinc-400 hover:text-zinc-200'
                     }`}
                   >
-                    <Heart className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-pink-500' : ''}`} />
-                    <span>Favorites ({favoriteCount})</span>
+                    <Heart className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-rose-400' : ''}`} />
+                    <span>Favorites ({entries.filter((e) => e.isFavorite).length})</span>
                   </button>
                 </div>
               </div>
-
-              {/* Collections Bar */}
-              {collections.length > 0 && (
-                <div className="flex items-center gap-1 overflow-x-auto pt-1 text-xs">
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">
-                    Folder:
-                  </span>
-                  <button
-                    onClick={() => setCollectionFilter('all')}
-                    className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                      collectionFilter === 'all'
-                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-semibold'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    All Collections
-                  </button>
-                  {collections.map((col) => (
-                    <button
-                      key={col.id}
-                      onClick={() => setCollectionFilter(col.id)}
-                      className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap flex items-center gap-1.5 transition-colors ${
-                        collectionFilter === col.id
-                          ? 'border border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 font-semibold text-indigo-700 dark:text-indigo-300'
-                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: col.color }} />
-                      <span>{col.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
-            {/* Multi-Select Floating Action Bar */}
+            {/* Multi-Select Floating Bar */}
             {isMultiSelect && (
-              <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900/60 flex flex-wrap items-center justify-between gap-3 animate-in fade-in">
+              <div className="p-3 rounded-2xl bg-zinc-900 border border-zinc-700 flex flex-wrap items-center justify-between gap-3 animate-in fade-in">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleSelectAll(filteredEntries)}
-                    className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:underline flex items-center gap-1.5"
+                    className="text-xs font-semibold text-zinc-200 hover:underline flex items-center gap-1.5"
                   >
                     {selectedIds.size === filteredEntries.length ? (
                       <CheckSquare className="w-4 h-4" />
@@ -573,42 +545,16 @@ export default function App() {
                       {selectedIds.size === filteredEntries.length ? 'Deselect All' : 'Select All'}
                     </span>
                   </button>
-                  <span className="text-xs text-indigo-600 dark:text-indigo-400 font-bold tabular-nums">
+                  <span className="text-xs font-mono font-bold text-zinc-300">
                     {selectedIds.size} of {filteredEntries.length} selected
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Bulk Move Dropdown */}
-                  <div className="relative group">
-                    <button className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
-                      <FolderInput className="w-3.5 h-3.5" />
-                      <span>Move to Collection</span>
-                    </button>
-                    <div className="hidden group-hover:block absolute right-0 top-full mt-1 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1 z-30">
-                      <button
-                        onClick={() => handleBulkMove(null)}
-                        className="w-full px-3 py-1 text-xs text-left text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      >
-                        None
-                      </button>
-                      {collections.map((c) => (
-                        <button
-                          key={c.id}
-                          onClick={() => handleBulkMove(c.id)}
-                          className="w-full px-3 py-1 text-xs text-left hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2"
-                        >
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color }} />
-                          <span className="truncate">{c.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   <button
                     onClick={handleBulkDelete}
                     disabled={selectedIds.size === 0}
-                    className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold disabled:opacity-50 flex items-center gap-1.5 transition-colors"
+                    className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold disabled:opacity-50 flex items-center gap-1.5 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete Selected</span>
@@ -617,45 +563,20 @@ export default function App() {
               </div>
             )}
 
-            {/* Empty State */}
+            {/* Cards Grid */}
             {filteredEntries.length === 0 ? (
-              <div className="py-16 text-center rounded-3xl bg-white dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 p-8 space-y-3">
-                <div className="w-12 h-12 mx-auto rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 flex items-center justify-center">
+              <div className="py-16 text-center rounded-3xl bg-zinc-900/40 border border-dashed border-zinc-800 p-8 space-y-3">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-zinc-800 text-zinc-400 flex items-center justify-center">
                   <ClipboardList className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-                  {searchQuery || typeFilter !== 'all' || collectionFilter !== 'all'
-                    ? 'No matching clips found'
-                    : 'Clipboard history is currently empty'}
+                <h3 className="text-base font-bold text-zinc-200">
+                  {searchQuery ? 'No matching clips found' : 'Clipboard history is empty'}
                 </h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  {searchQuery || typeFilter !== 'all' || collectionFilter !== 'all'
-                    ? 'Try adjusting your search query, clearing category filters, or selecting a different folder.'
-                    : 'Copy text in any application or use the button below to paste or add clips to FR SHAH QuickPanel.'}
+                <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                  Copy text in any application or create new entries using the New Clip button.
                 </p>
-                <div className="pt-2 flex justify-center gap-2">
-                  <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setTypeFilter('all');
-                      setCollectionFilter('all');
-                      setOnlyPinned(false);
-                      setOnlyFavorites(false);
-                    }}
-                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
-                  >
-                    Reset Filters
-                  </button>
-                  <button
-                    onClick={() => setIsNewClipOpen(true)}
-                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm"
-                  >
-                    Add New Clip
-                  </button>
-                </div>
               </div>
             ) : (
-              /* Clipboard Entries Cards Grid */
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {filteredEntries.map((entry) => {
                   const col = collections.find((c) => c.id === entry.collectionId);
@@ -665,18 +586,21 @@ export default function App() {
                       entry={entry}
                       collection={col}
                       collections={collections}
-                      appearance={settings.cardAppearance}
+                      appearance={clipboardSettings.cardAppearance}
                       isSelected={selectedIds.has(entry.id)}
                       isMultiSelectMode={isMultiSelect}
                       onToggleSelect={handleToggleSelect}
-                      onCopy={handleCopy}
+                      onCopy={handleCopyClip}
                       onTogglePin={handleTogglePin}
                       onToggleFavorite={handleToggleFavorite}
                       onDelete={handleDeleteEntry}
                       onPreview={(e) => setPreviewEntry(e)}
                       onEdit={(e) => setEditEntry(e)}
-                      onMoveToCollection={handleMoveToCollection}
-                      onShare={handleShare}
+                      onMoveToCollection={(id, colId) => {
+                        roomDb.updateEntry(id, { collectionId: colId });
+                        reloadFromDb();
+                      }}
+                      onShare={handleShareClip}
                     />
                   );
                 })}
@@ -685,32 +609,35 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 2: Collections Manager */}
-        {currentView === 'collections' && (
-          <CollectionsManager
-            collections={collections}
-            entries={entries}
-            onAddCollection={(newCol) => {
-              roomDb.addCollection(newCol);
-              reloadFromDb();
-            }}
-            onUpdateCollection={(id, updates) => {
-              roomDb.updateCollection(id, updates);
-              reloadFromDb();
-            }}
-            onDeleteCollection={(id) => {
-              roomDb.deleteCollection(id);
-              reloadFromDb();
-            }}
-            onSelectCollectionFilter={(colId) => {
-              setCollectionFilter(colId);
-              setCurrentView('history');
-            }}
-          />
-        )}
+        {/* 3. SCREENSHOT TOOLS VIEW */}
+        {currentView === 'screenshot' && <ScreenshotTool />}
 
-        {/* VIEW 3: Room Database Inspector */}
-        {currentView === 'inspector' && (
+        {/* 4. SCREEN RECORDER VIEW */}
+        {currentView === 'recorder' && <ScreenRecorderTool />}
+
+        {/* 5. FLASHLIGHT VIEW */}
+        {currentView === 'flashlight' && <FlashlightTool />}
+
+        {/* 6. VOLUME & BRIGHTNESS VIEW */}
+        {currentView === 'volume' && <VolumeBrightnessTool />}
+
+        {/* 7. CALCULATOR VIEW */}
+        {currentView === 'calculator' && <CalculatorTool />}
+
+        {/* 8. QUICK NOTES VIEW */}
+        {currentView === 'notes' && <QuickNotesTool />}
+
+        {/* 9. STOPWATCH VIEW */}
+        {currentView === 'stopwatch' && <StopwatchTool />}
+
+        {/* 10. QR SCANNER VIEW */}
+        {currentView === 'qrscanner' && <QrScannerTool />}
+
+        {/* 11. APP SHORTCUTS VIEW */}
+        {currentView === 'appshortcuts' && <AppShortcutsTool />}
+
+        {/* 12. ROOM DATABASE INSPECTOR VIEW */}
+        {currentView === 'room_inspector' && (
           <RoomInspector
             entries={entries}
             collections={collections}
@@ -722,49 +649,84 @@ export default function App() {
           />
         )}
 
-        {/* VIEW 4: Verification & Test Simulation Suite */}
+        {/* 13. TEST SUITE VIEW */}
         {currentView === 'test_suite' && (
           <TestSimulationSuite
-            settings={settings}
+            settings={clipboardSettings}
             onRefreshData={reloadFromDb}
           />
         )}
       </main>
 
-      {/* Footer (Quiet copyright and developer credit) */}
-      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+      {/* Footer */}
+      <footer className="mt-auto border-t border-zinc-800 bg-zinc-950/80 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-900 dark:text-slate-200">FR SHAH QuickPanel</span>
+            <span className="font-bold text-zinc-200">FR SHAH QuickPanel</span>
             <span aria-hidden="true">·</span>
-            <span>Smart Clipboard Manager</span>
+            <span className="font-mono">Build. Control. Customize.</span>
             <span aria-hidden="true">·</span>
-            <span className="text-indigo-600 dark:text-indigo-400 font-bold">MADE BY FR SHAH</span>
+            <span className="font-bold text-zinc-300">MADE BY FR SHAH</span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px]">
-            <span>Room Database v2.6.1</span>
+          <div className="flex items-center gap-4 text-[11px] font-mono text-zinc-400">
+            <span>Moto G75 5G Calibrated</span>
             <span aria-hidden="true">·</span>
-            <span>Foreground Gated</span>
+            <span>Android 10 - 16 Support</span>
             <span aria-hidden="true">·</span>
-            <span>Zero-Server Privacy Guarantee</span>
+            <span>Room DB v2.6</span>
           </div>
         </div>
       </footer>
 
-      {/* Modals & Slide-out Drawers */}
+      {/* Draggable Floating Button (TYPE_APPLICATION_OVERLAY) */}
+      <FloatingQuickPanelButton
+        config={customization.floatingConfig}
+        onUpdatePosition={(x, y) => {
+          handleSaveCustomization({
+            ...customization,
+            floatingConfig: { ...customization.floatingConfig, positionX: x, positionY: y },
+          });
+        }}
+        onOpenQuickPanel={() => setCurrentView('dashboard')}
+        onTriggerShortcut={(toolId) => setCurrentView(toolId as MainNavView)}
+      />
+
+      {/* Multi-Tool Edge Panel Drawer */}
+      <EdgePanelDrawer
+        isOpen={isEdgeOpen}
+        onToggle={() => setIsEdgeOpen(!isEdgeOpen)}
+        config={customization.edgeConfig}
+        entries={entries}
+        collections={collections}
+        onCopyClip={handleCopyClip}
+        onOpenNewClip={() => setIsNewClipOpen(true)}
+        onSelectTool={(toolId) => {
+          setCurrentView(toolId as MainNavView);
+          setIsEdgeOpen(false);
+        }}
+        onOpenFullDashboard={() => {
+          setCurrentView('dashboard');
+          setIsEdgeOpen(false);
+        }}
+      />
+
+      {/* Modals */}
       <ClipboardPreviewModal
         entry={previewEntry}
         collection={collections.find((c) => c.id === previewEntry?.collectionId)}
         collections={collections}
         onClose={() => setPreviewEntry(null)}
-        onCopy={handleCopy}
+        onCopy={handleCopyClip}
         onTogglePin={handleTogglePin}
         onToggleFavorite={handleToggleFavorite}
         onDelete={handleDeleteEntry}
         onEdit={(e) => setEditEntry(e)}
-        onMoveToCollection={handleMoveToCollection}
-        onShare={handleShare}
+        onMoveToCollection={(id, colId) => {
+          roomDb.updateEntry(id, { collectionId: colId });
+          reloadFromDb();
+        }}
+        onShare={handleShareClip}
       />
 
       <NewClipModal
@@ -778,53 +740,37 @@ export default function App() {
         entry={editEntry}
         collections={collections}
         onClose={() => setEditEntry(null)}
-        onSave={handleSaveEdit}
-      />
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        settings={settings}
-        onSaveSettings={(newSettings) => {
-          roomDb.saveSettings(newSettings);
-          reloadFromDb();
-        }}
-        onWipeHistory={(preservePinned) => {
-          roomDb.wipeAll(preservePinned);
+        onSave={(id, updates) => {
+          roomDb.updateEntry(id, updates);
           reloadFromDb();
         }}
       />
 
-      {/* Samsung One UI / Android Style Edge Panel */}
-      <EdgePanel
-        isOpen={isEdgeOpen}
-        onToggle={() => setIsEdgeOpen(!isEdgeOpen)}
-        entries={entries}
-        collections={collections}
-        onCopy={handleCopy}
-        onOpenNewClip={() => setIsNewClipOpen(true)}
-        onOpenFullDashboard={() => {
-          setCurrentView('history');
-          setIsEdgeOpen(false);
-        }}
+      <CustomizationModal
+        isOpen={isCustomizationOpen}
+        onClose={() => setIsCustomizationOpen(false)}
+        customization={customization}
+        tools={tools}
+        onSaveCustomization={handleSaveCustomization}
+        onToggleTool={handleToggleTool}
+        onReorderTools={handleReorderTools}
+        onResetDefaults={handleResetDefaults}
       />
 
-      {/* Android Freeform / Floating QuickPanel Widget */}
-      <FloatingPanel
-        isOpen={isFloatingOpen}
-        onClose={() => setIsFloatingOpen(false)}
-        entries={entries}
-        collections={collections}
-        onCopy={handleCopy}
-        onOpenNewClip={() => setIsNewClipOpen(true)}
-        onOpenFullDashboard={() => {
-          setCurrentView('history');
-          setIsFloatingOpen(false);
-        }}
+      <PermissionsManagerModal
+        isOpen={isPermissionsOpen}
+        onClose={() => setIsPermissionsOpen(false)}
+        permissions={permissions}
+        onTogglePermission={handleTogglePermission}
       />
 
-      {/* Android 13+ Visual Privacy Pill / Toast */}
-      {settings.showAndroidPrivacyChip && <AndroidPrivacyChip />}
+      <AndroidSourceModal
+        isOpen={isAndroidSourceOpen}
+        onClose={() => setIsAndroidSourceOpen(false)}
+      />
+
+      {/* Android 13+ Privacy Chip */}
+      {clipboardSettings.showAndroidPrivacyChip && <AndroidPrivacyChip />}
     </div>
   );
 }

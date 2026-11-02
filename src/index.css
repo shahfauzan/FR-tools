@@ -11,7 +11,7 @@
   }
 }
 
-/* Material 3 smooth custom scrollbar */
+/* Material 3 smooth custom scrollbar (Black & Grey Theme) */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -20,9 +20,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
+  background: rgba(113, 113, 122, 0.35);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(113, 113, 122, 0.6);
 }

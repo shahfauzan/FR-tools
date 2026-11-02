@@ -156,25 +156,25 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
       }}
       className={`group relative rounded-2xl transition-all duration-200 cursor-pointer border ${
         isSelected
-          ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-500 shadow-sm'
-          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-xs hover:shadow-sm'
+          ? 'bg-zinc-800/60 border-zinc-400 shadow-sm'
+          : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 shadow-xs hover:shadow-sm'
       } ${paddingClass}`}
     >
       {/* Top Metadata Header Row (Clean unboxed text with typographic separators) */}
       <div className="flex items-center justify-between gap-3 mb-2.5">
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 truncate">
+        <div className="flex items-center gap-2 text-xs text-zinc-400 truncate">
           {isMultiSelectMode && (
             <input
               type="checkbox"
               checked={isSelected}
               onChange={() => onToggleSelect(entry.id)}
               onClick={(e) => e.stopPropagation()}
-              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-700 cursor-pointer"
+              className="w-4 h-4 rounded text-zinc-100 border-zinc-700 cursor-pointer"
             />
           )}
 
           {appearance.showContentTypeBadge && (
-            <span className="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300 shrink-0">
+            <span className="flex items-center gap-1 font-medium text-zinc-300 shrink-0">
               {getContentTypeIcon()}
               <span>{getContentTypeLabel()}</span>
             </span>
@@ -182,10 +182,9 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
 
           {collection && (
             <>
-              <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
+              <span aria-hidden="true" className="text-zinc-600">·</span>
               <span 
-                className="font-medium truncate"
-                style={{ color: collection.color }}
+                className="font-medium truncate text-zinc-300"
               >
                 {collection.name}
               </span>
@@ -194,22 +193,22 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
 
           {appearance.showTimestamp && (
             <>
-              <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
-              <span className="shrink-0">{formatTime(entry.createdAt)}</span>
+              <span aria-hidden="true" className="text-zinc-600">·</span>
+              <span className="shrink-0 text-zinc-400">{formatTime(entry.createdAt)}</span>
             </>
           )}
 
           {appearance.showCharCount && entry.metadata?.charCount && (
             <>
-              <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
-              <span className="shrink-0 tabular-nums">{entry.metadata.charCount} chars</span>
+              <span aria-hidden="true" className="text-zinc-600">·</span>
+              <span className="shrink-0 tabular-nums text-zinc-500">{entry.metadata.charCount} chars</span>
             </>
           )}
 
           {entry.copyCount > 1 && (
             <>
-              <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">·</span>
-              <span className="shrink-0 tabular-nums">Used {entry.copyCount}x</span>
+              <span aria-hidden="true" className="text-zinc-600">·</span>
+              <span className="shrink-0 tabular-nums text-zinc-400">Used {entry.copyCount}x</span>
             </>
           )}
         </div>
@@ -220,34 +219,34 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
             onClick={() => onTogglePin(entry.id)}
             className={`p-1.5 rounded-lg transition-colors ${
               entry.isPinned
-                ? 'text-amber-500 bg-amber-500/10 hover:bg-amber-500/20'
-                : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
             }`}
             title={entry.isPinned ? 'Unpin from top' : 'Pin entry to top'}
             aria-label="Pin entry"
           >
-            <Pin className={`w-3.5 h-3.5 ${entry.isPinned ? 'fill-amber-500' : ''}`} />
+            <Pin className={`w-3.5 h-3.5 ${entry.isPinned ? 'fill-amber-400' : ''}`} />
           </button>
 
           <button
             onClick={() => onToggleFavorite(entry.id)}
             className={`p-1.5 rounded-lg transition-colors ${
               entry.isFavorite
-                ? 'text-pink-500 bg-pink-500/10 hover:bg-pink-500/20'
-                : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'text-rose-400 bg-rose-500/10 hover:bg-rose-500/20'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
             }`}
             title={entry.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
             aria-label="Favorite entry"
           >
-            <Heart className={`w-3.5 h-3.5 ${entry.isFavorite ? 'fill-pink-500' : ''}`} />
+            <Heart className={`w-3.5 h-3.5 ${entry.isFavorite ? 'fill-rose-400' : ''}`} />
           </button>
 
           <button
             onClick={handleCopyClick}
             className={`p-1.5 rounded-lg transition-colors ${
               copied
-                ? 'text-emerald-600 bg-emerald-500/15 dark:text-emerald-400'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'text-emerald-400 bg-emerald-500/15'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
             }`}
             title="Copy to clipboard"
             aria-label="Copy"
@@ -259,7 +258,7 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
               title="More options"
               aria-label="More options"
             >
@@ -268,7 +267,7 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
 
             {showMenu && (
               <div 
-                className="absolute right-0 top-full mt-1 w-44 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl py-1 z-30 animate-in fade-in zoom-in-95"
+                className="absolute right-0 top-full mt-1 w-44 rounded-2xl bg-zinc-900 border border-zinc-700 shadow-2xl py-1 z-30 animate-in fade-in zoom-in-95"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -276,9 +275,9 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
                     setShowMenu(false);
                     onPreview(entry);
                   }}
-                  className="w-full px-3 py-1.5 text-xs text-left text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 flex items-center gap-2"
+                  className="w-full px-3 py-1.5 text-xs text-left text-zinc-200 hover:bg-zinc-800 flex items-center gap-2"
                 >
-                  <Eye className="w-3.5 h-3.5 text-slate-400" />
+                  <Eye className="w-3.5 h-3.5 text-zinc-400" />
                   <span>Full Preview</span>
                 </button>
 
@@ -287,9 +286,9 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
                     setShowMenu(false);
                     onEdit(entry);
                   }}
-                  className="w-full px-3 py-1.5 text-xs text-left text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 flex items-center gap-2"
+                  className="w-full px-3 py-1.5 text-xs text-left text-zinc-200 hover:bg-zinc-800 flex items-center gap-2"
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-slate-400" />
+                  <Edit3 className="w-3.5 h-3.5 text-zinc-400" />
                   <span>Edit Clip</span>
                 </button>
 
@@ -298,16 +297,16 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
                     setShowMenu(false);
                     onShare(entry);
                   }}
-                  className="w-full px-3 py-1.5 text-xs text-left text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 flex items-center gap-2"
+                  className="w-full px-3 py-1.5 text-xs text-left text-zinc-200 hover:bg-zinc-800 flex items-center gap-2"
                 >
-                  <Share2 className="w-3.5 h-3.5 text-slate-400" />
+                  <Share2 className="w-3.5 h-3.5 text-zinc-400" />
                   <span>Share Clip</span>
                 </button>
 
-                <div className="border-t border-slate-100 dark:border-slate-700/80 my-1" />
+                <div className="border-t border-zinc-800 my-1" />
 
                 {/* Move to collection sub-trigger */}
-                <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                <div className="px-3 py-1 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
                   Move Collection
                 </div>
                 {collections.map((col) => (
@@ -317,11 +316,11 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
                       setShowMenu(false);
                       onMoveToCollection(entry.id, col.id);
                     }}
-                    className={`w-full px-3 py-1 text-xs text-left hover:bg-slate-100 dark:hover:bg-slate-700/60 flex items-center gap-2 ${
-                      entry.collectionId === col.id ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-300'
+                    className={`w-full px-3 py-1 text-xs text-left hover:bg-zinc-800 flex items-center gap-2 ${
+                      entry.collectionId === col.id ? 'font-semibold text-zinc-100 bg-zinc-800/80' : 'text-zinc-400'
                     }`}
                   >
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: col.color }} />
+                    <span className="w-2 h-2 rounded-full bg-zinc-400" />
                     <span className="truncate">{col.name}</span>
                   </button>
                 ))}
@@ -331,21 +330,21 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
                       setShowMenu(false);
                       onMoveToCollection(entry.id, null);
                     }}
-                    className="w-full px-3 py-1 text-xs text-left text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700/60 flex items-center gap-2 italic"
+                    className="w-full px-3 py-1 text-xs text-left text-zinc-500 hover:bg-zinc-800 flex items-center gap-2 italic"
                   >
                     <FolderInput className="w-3 h-3" />
                     <span>Clear collection</span>
                   </button>
                 )}
 
-                <div className="border-t border-slate-100 dark:border-slate-700/80 my-1" />
+                <div className="border-t border-zinc-800 my-1" />
 
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     onDelete(entry.id);
                   }}
-                  className="w-full px-3 py-1.5 text-xs text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2"
+                  className="w-full px-3 py-1.5 text-xs text-left text-rose-400 hover:bg-rose-950/30 flex items-center gap-2"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Delete</span>

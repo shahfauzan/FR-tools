@@ -42,23 +42,23 @@ export const AndroidPrivacyChip: React.FC = () => {
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 pointer-events-auto">
-      <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-slate-900/95 dark:bg-slate-800/95 text-slate-100 shadow-xl border border-slate-700/60 backdrop-blur-md max-w-md">
-        <div className="p-1 rounded-full bg-indigo-500/20 text-indigo-400 shrink-0">
-          {toast.type === 'copy' && <Clipboard className="w-4 h-4" />}
+      <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-zinc-900/95 text-zinc-100 shadow-2xl border border-zinc-700/80 backdrop-blur-md max-w-md">
+        <div className="p-1 rounded-full bg-zinc-800 text-zinc-300 shrink-0">
+          {toast.type === 'copy' && <Clipboard className="w-4 h-4 text-zinc-200" />}
           {toast.type === 'capture' && <ShieldCheck className="w-4 h-4 text-emerald-400" />}
           {toast.type === 'warning' && <AlertTriangle className="w-4 h-4 text-amber-400" />}
         </div>
         <div className="flex flex-col min-w-0 pr-1">
-          <span className="text-xs font-semibold text-slate-200 truncate">{toast.message}</span>
+          <span className="text-xs font-semibold text-zinc-200 truncate">{toast.message}</span>
           {toast.preview && (
-            <span className="text-[11px] text-slate-400 truncate font-mono">
+            <span className="text-[11px] text-zinc-400 truncate font-mono">
               {toast.preview}
             </span>
           )}
         </div>
         <button
           onClick={() => setToast(null)}
-          className="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-full hover:bg-slate-700/50"
+          className="text-zinc-400 hover:text-zinc-100 transition-colors p-1 rounded-full hover:bg-zinc-800"
           aria-label="Dismiss notification"
         >
           <X className="w-3.5 h-3.5" />

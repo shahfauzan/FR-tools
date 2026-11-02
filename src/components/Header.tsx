@@ -1,6 +1,6 @@
 /**
- * FR SHAH SMART CLIPBOARD MANAGER
- * Top Navigation Bar (Compliant with Top Bar Contract)
+ * FR SHAH QuickPanel · Build. Control. Customize.
+ * Top Navigation Bar (Industrial Black & Grey Monochrome)
  * DEVELOPER CREDIT: MADE BY FR SHAH
  */
 
@@ -12,14 +12,33 @@ import {
   Moon, 
   SidebarOpen,
   AppWindow,
-  Database
+  ShieldCheck,
+  FolderGit2,
+  Sliders
 } from 'lucide-react';
 
+export type MainNavView = 
+  | 'dashboard' 
+  | 'clipboard' 
+  | 'screenshot' 
+  | 'recorder' 
+  | 'flashlight' 
+  | 'volume' 
+  | 'calculator' 
+  | 'notes' 
+  | 'stopwatch' 
+  | 'qrscanner' 
+  | 'appshortcuts' 
+  | 'room_inspector' 
+  | 'test_suite';
+
 interface HeaderProps {
-  currentView: 'history' | 'collections' | 'inspector' | 'test_suite';
-  onViewChange: (view: 'history' | 'collections' | 'inspector' | 'test_suite') => void;
+  currentView: MainNavView;
+  onViewChange: (view: MainNavView) => void;
   onOpenNewClip: () => void;
-  onOpenSettings: () => void;
+  onOpenCustomization: () => void;
+  onOpenPermissions: () => void;
+  onOpenAndroidSource: () => void;
   onToggleEdgePanel: () => void;
   onToggleFloatingPanel: () => void;
   theme: 'dark' | 'light';
@@ -32,7 +51,9 @@ export const Header: React.FC<HeaderProps> = ({
   currentView,
   onViewChange,
   onOpenNewClip,
-  onOpenSettings,
+  onOpenCustomization,
+  onOpenPermissions,
+  onOpenAndroidSource,
   onToggleEdgePanel,
   onToggleFloatingPanel,
   theme,
@@ -41,91 +62,100 @@ export const Header: React.FC<HeaderProps> = ({
   isFloatingOpen,
 }) => {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-8 h-16">
         
         {/* Zone 1: Brand wordmark */}
         <div className="flex items-center gap-3 shrink-0">
-          <a
-            href="#history"
-            onClick={(e) => {
-              e.preventDefault();
-              onViewChange('history');
-            }}
-            className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 whitespace-nowrap flex items-center gap-2"
+          <button
+            onClick={() => onViewChange('dashboard')}
+            className="text-left flex items-center gap-2.5 group cursor-pointer"
           >
-            <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shadow-sm text-sm font-black">
+            <span className="w-8 h-8 rounded-xl bg-zinc-100 text-zinc-950 flex items-center justify-center shadow-sm text-xs font-black tracking-tighter group-hover:scale-105 transition-transform">
               FR
             </span>
-            <span>FR SHAH QuickPanel</span>
-          </a>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold tracking-tight text-zinc-100 whitespace-nowrap">
+                FR SHAH QuickPanel
+              </span>
+              <span className="text-[10px] text-zinc-400 font-mono hidden sm:inline">
+                Build. Control. Customize.
+              </span>
+            </div>
+          </button>
         </div>
 
-        {/* Zone 2: Navigation Links (single-line, concise) */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
+        {/* Zone 2: Navigation Links (Single line, black & grey) */}
+        <nav className="hidden lg:flex items-center gap-6 text-xs font-medium text-zinc-400">
           <button
-            onClick={() => onViewChange('history')}
-            className={`whitespace-nowrap transition-colors hover:text-slate-900 dark:hover:text-white ${
-              currentView === 'history' ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : ''
+            onClick={() => onViewChange('dashboard')}
+            className={`whitespace-nowrap transition-colors hover:text-white ${
+              currentView === 'dashboard' ? 'text-zinc-100 font-bold border-b border-zinc-100 pb-0.5' : ''
             }`}
           >
-            History & Clips
+            Dashboard
           </button>
 
           <button
-            onClick={() => onViewChange('collections')}
-            className={`whitespace-nowrap transition-colors hover:text-slate-900 dark:hover:text-white ${
-              currentView === 'collections' ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : ''
+            onClick={() => onViewChange('clipboard')}
+            className={`whitespace-nowrap transition-colors hover:text-white ${
+              currentView === 'clipboard' ? 'text-zinc-100 font-bold border-b border-zinc-100 pb-0.5' : ''
             }`}
           >
-            Collections
+            Smart Clipboard
           </button>
 
           <button
             onClick={onToggleEdgePanel}
-            className={`whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-slate-900 dark:hover:text-white ${
-              isEdgeOpen ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : ''
+            className={`whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-white ${
+              isEdgeOpen ? 'text-zinc-100 font-bold' : ''
             }`}
           >
-            <SidebarOpen className="w-4 h-4" />
+            <SidebarOpen className="w-3.5 h-3.5" />
             <span>Edge Panel</span>
           </button>
 
           <button
             onClick={onToggleFloatingPanel}
-            className={`whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-slate-900 dark:hover:text-white ${
-              isFloatingOpen ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : ''
+            className={`whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-white ${
+              isFloatingOpen ? 'text-zinc-100 font-bold' : ''
             }`}
           >
-            <AppWindow className="w-4 h-4" />
-            <span>Floating Panel</span>
+            <AppWindow className="w-3.5 h-3.5" />
+            <span>Floating Button</span>
           </button>
 
           <button
-            onClick={() => onViewChange('inspector')}
-            className={`whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-slate-900 dark:hover:text-white ${
-              currentView === 'inspector' ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : ''
-            }`}
+            onClick={onOpenPermissions}
+            className="whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-white"
           >
-            <Database className="w-4 h-4" />
-            <span>Room DB</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Permissions</span>
+          </button>
+
+          <button
+            onClick={onOpenAndroidSource}
+            className="whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-white font-mono text-[11px]"
+          >
+            <FolderGit2 className="w-3.5 h-3.5 text-zinc-400" />
+            <span>Android Code & GitHub</span>
           </button>
 
           <button
             onClick={() => onViewChange('test_suite')}
-            className={`whitespace-nowrap transition-colors hover:text-slate-900 dark:hover:text-white ${
-              currentView === 'test_suite' ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : ''
+            className={`whitespace-nowrap transition-colors hover:text-white ${
+              currentView === 'test_suite' ? 'text-zinc-100 font-bold border-b border-zinc-100 pb-0.5' : ''
             }`}
           >
-            Verification Suite
+            Test Suite
           </button>
         </nav>
 
         {/* Zone 3: Primary Action & Tools */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onToggleTheme}
-            className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 text-zinc-400 hover:text-zinc-100 rounded-xl hover:bg-zinc-800 transition-colors"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             aria-label="Toggle theme"
           >
@@ -133,19 +163,19 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <button
-            onClick={onOpenSettings}
-            className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            title="Clipboard & Room DB Settings"
-            aria-label="Settings"
+            onClick={onOpenCustomization}
+            className="p-2 text-zinc-400 hover:text-zinc-100 rounded-xl hover:bg-zinc-800 transition-colors"
+            title="Customization Engine"
+            aria-label="Customize"
           >
-            <Settings className="w-4 h-4" />
+            <Sliders className="w-4 h-4" />
           </button>
 
           <button
             onClick={onOpenNewClip}
-            className="px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-sm transition-colors whitespace-nowrap flex items-center gap-1.5"
+            className="px-3 py-1.5 text-xs font-bold text-zinc-950 bg-zinc-100 hover:bg-white active:scale-95 rounded-xl shadow-sm transition-all whitespace-nowrap flex items-center gap-1.5"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>New Clip</span>
           </button>
         </div>
