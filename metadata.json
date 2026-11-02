@@ -1,0 +1,6 @@
+{
+  "name": "FR SHAH QuickPanel - Smart Clipboard Manager",
+  "description": "Next-generation Android-inspired Smart Clipboard Manager for FR SHAH QuickPanel with persistent local Room database history, smart classification, edge & floating panels, and granular privacy controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
