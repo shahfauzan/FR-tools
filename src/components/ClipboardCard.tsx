@@ -28,7 +28,8 @@ import {
   FileText, 
   MoreHorizontal,
   Lock,
-  EyeOff
+  EyeOff,
+  QrCode
 } from 'lucide-react';
 import { maskSensitiveContent } from '../utils/classifier';
 
@@ -48,6 +49,7 @@ interface ClipboardCardProps {
   onEdit: (entry: ClipboardEntry) => void;
   onMoveToCollection: (id: string, collectionId: string | null) => void;
   onShare: (entry: ClipboardEntry) => void;
+  onConvertToQr?: (text: string) => void;
 }
 
 export const ClipboardCard: React.FC<ClipboardCardProps> = ({
@@ -66,6 +68,7 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
   onEdit,
   onMoveToCollection,
   onShare,
+  onConvertToQr,
 }) => {
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -302,6 +305,19 @@ export const ClipboardCard: React.FC<ClipboardCardProps> = ({
                   <Share2 className="w-3.5 h-3.5 text-zinc-400" />
                   <span>Share Clip</span>
                 </button>
+
+                {onConvertToQr && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      onConvertToQr(entry.content);
+                    }}
+                    className="w-full px-3 py-1.5 text-xs text-left text-zinc-200 hover:bg-zinc-800 flex items-center gap-2"
+                  >
+                    <QrCode className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Generate QR Code</span>
+                  </button>
+                )}
 
                 <div className="border-t border-zinc-800 my-1" />
 

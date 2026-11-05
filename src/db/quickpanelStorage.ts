@@ -28,13 +28,23 @@ const STORAGE_KEYS = {
 
 export const DEFAULT_TOOLS: ToolDefinition[] = [
   {
+    id: 'battery',
+    name: 'Battery Health & Power',
+    category: 'system',
+    description: 'Real-time battery telemetry, temperature, health %, and charging estimates',
+    icon: 'BatteryCharging',
+    enabled: true,
+    order: 0,
+    badge: 'Live Telemetry',
+  },
+  {
     id: 'clipboard',
     name: 'Smart Clipboard',
     category: 'productivity',
     description: 'Room DB persistent clipboard history with smart classification',
     icon: 'ClipboardList',
     enabled: true,
-    order: 0,
+    order: 1,
     badge: 'Room DB',
   },
   {
@@ -44,7 +54,7 @@ export const DEFAULT_TOOLS: ToolDefinition[] = [
     description: 'Capture, organize, and preview Pictures/FR SHAH QuickPanel',
     icon: 'Camera',
     enabled: true,
-    order: 1,
+    order: 2,
   },
   {
     id: 'recorder',
@@ -111,13 +121,23 @@ export const DEFAULT_TOOLS: ToolDefinition[] = [
     order: 8,
   },
   {
+    id: 'qrgenerator',
+    name: 'QR Generator',
+    category: 'utility',
+    description: 'Convert copied text, links, or custom payloads into high-res scannable QR codes',
+    icon: 'QrCode',
+    enabled: true,
+    order: 9,
+    badge: 'Clipboard Sync',
+  },
+  {
     id: 'appshortcuts',
     name: 'App Shortcuts',
     category: 'system',
     description: 'Quick launcher for frequently used installed applications',
     icon: 'Grid',
     enabled: true,
-    order: 9,
+    order: 10,
   },
 ];
 
@@ -256,7 +276,11 @@ class QuickPanelStorageService {
       // 2. Tools
       const savedTools = localStorage.getItem(STORAGE_KEYS.TOOLS);
       if (savedTools) {
-        this.tools = JSON.parse(savedTools);
+        const parsed: ToolDefinition[] = JSON.parse(savedTools);
+        // Ensure new tools like 'battery' are included
+        const existingIds = new Set(parsed.map((t) => t.id));
+        const missing = DEFAULT_TOOLS.filter((t) => !existingIds.has(t.id));
+        this.tools = [...missing, ...parsed].sort((a, b) => a.order - b.order);
       }
 
       // 3. Notes

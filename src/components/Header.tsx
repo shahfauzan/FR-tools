@@ -14,12 +14,17 @@ import {
   AppWindow,
   ShieldCheck,
   FolderGit2,
-  Sliders
+  Sliders,
+  BatteryCharging,
+  Smartphone,
+  QrCode
 } from 'lucide-react';
 
 export type MainNavView = 
   | 'dashboard' 
+  | 'battery'
   | 'clipboard' 
+  | 'qrgenerator'
   | 'screenshot' 
   | 'recorder' 
   | 'flashlight' 
@@ -29,6 +34,7 @@ export type MainNavView =
   | 'stopwatch' 
   | 'qrscanner' 
   | 'appshortcuts' 
+  | 'homescreen'
   | 'room_inspector' 
   | 'test_suite';
 
@@ -97,12 +103,42 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           <button
+            onClick={() => onViewChange('battery')}
+            className={`whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-white ${
+              currentView === 'battery' ? 'text-zinc-100 font-bold border-b border-zinc-100 pb-0.5' : ''
+            }`}
+          >
+            <BatteryCharging className="w-3.5 h-3.5 text-zinc-300" />
+            <span>Battery Health</span>
+          </button>
+
+          <button
+            onClick={() => onViewChange('homescreen')}
+            className={`whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-white ${
+              currentView === 'homescreen' ? 'text-zinc-100 font-bold border-b border-zinc-100 pb-0.5' : ''
+            }`}
+          >
+            <Smartphone className="w-3.5 h-3.5 text-zinc-300" />
+            <span>Homescreen Overlay</span>
+          </button>
+
+          <button
             onClick={() => onViewChange('clipboard')}
             className={`whitespace-nowrap transition-colors hover:text-white ${
               currentView === 'clipboard' ? 'text-zinc-100 font-bold border-b border-zinc-100 pb-0.5' : ''
             }`}
           >
             Smart Clipboard
+          </button>
+
+          <button
+            onClick={() => onViewChange('qrgenerator')}
+            className={`whitespace-nowrap flex items-center gap-1.5 transition-colors hover:text-white ${
+              currentView === 'qrgenerator' ? 'text-zinc-100 font-bold border-b border-zinc-100 pb-0.5' : ''
+            }`}
+          >
+            <QrCode className="w-3.5 h-3.5 text-zinc-300" />
+            <span>QR Generator</span>
           </button>
 
           <button

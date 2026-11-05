@@ -16,7 +16,10 @@ import {
   Flashlight, 
   SlidersHorizontal,
   Calculator,
-  Timer
+  Timer,
+  BatteryCharging,
+  Smartphone,
+  QrCode
 } from 'lucide-react';
 import { FloatingPanelConfig, ToolId } from '../types/quickpanel';
 
@@ -164,12 +167,40 @@ export const FloatingQuickPanelButton: React.FC<FloatingQuickPanelButtonProps> =
             <button
               onClick={() => {
                 setShowQuickMenu(false);
+                onTriggerShortcut('battery');
+              }}
+              className="w-full px-3 py-2 rounded-xl text-left hover:bg-zinc-800 text-zinc-100 flex items-center justify-between transition-colors bg-zinc-800/40"
+            >
+              <div className="flex items-center gap-2.5">
+                <BatteryCharging className="w-4 h-4 text-zinc-200" />
+                <span className="font-semibold">Battery Health & Power</span>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded">Live</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setShowQuickMenu(false);
                 onTriggerShortcut('clipboard');
               }}
               className="w-full px-3 py-2 rounded-xl text-left hover:bg-zinc-800 text-zinc-200 flex items-center gap-2.5 transition-colors"
             >
               <ClipboardList className="w-4 h-4 text-zinc-400" />
               <span>Smart Clipboard</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setShowQuickMenu(false);
+                onTriggerShortcut('qrgenerator');
+              }}
+              className="w-full px-3 py-2 rounded-xl text-left hover:bg-zinc-800 text-zinc-200 flex items-center justify-between transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <QrCode className="w-4 h-4 text-zinc-300" />
+                <span>QR Generator</span>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800 px-1.5 py-0.5 rounded">New</span>
             </button>
 
             <button

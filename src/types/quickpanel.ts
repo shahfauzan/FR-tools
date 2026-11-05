@@ -7,6 +7,7 @@
 import { ClipboardEntry, Collection, ClipboardSettings } from './clipboard';
 
 export type ToolId = 
+  | 'battery'
   | 'clipboard'
   | 'screenshot'
   | 'recorder'
@@ -16,7 +17,24 @@ export type ToolId =
   | 'notes'
   | 'stopwatch'
   | 'qrscanner'
+  | 'qrgenerator'
   | 'appshortcuts';
+
+export interface BatteryInfo {
+  level: number; // 0 to 100
+  isCharging: boolean;
+  chargingTime: number; // seconds to full, or Infinity
+  dischargingTime: number; // seconds remaining, or Infinity
+  temperatureC: number;
+  health: 'Good' | 'Fair' | 'Service Required';
+  capacityMah: number;
+  designedCapacityMah: number;
+  voltageV: number;
+  cycleCount: number;
+  powerSource: 'AC TurboPower 30W' | 'USB-PD' | 'Wireless Qi' | 'Battery';
+  powerSavingMode: 'off' | 'saver' | 'extreme';
+  protectBatteryLimit: boolean; // limit charge to 80%
+}
 
 export interface ToolDefinition {
   id: ToolId;

@@ -38,8 +38,12 @@ import { AndroidPrivacyChip } from './components/AndroidPrivacyChip';
 import { CustomizationModal } from './components/CustomizationModal';
 import { PermissionsManagerModal } from './components/PermissionsManagerModal';
 import { AndroidSourceModal } from './components/AndroidSourceModal';
+import { MobileBottomToggleBar } from './components/MobileBottomToggleBar';
 
 // Dedicated Tool Components
+import { BatteryHealthTool } from './components/tools/BatteryHealthTool';
+import { QrGeneratorTool } from './components/tools/QrGeneratorTool';
+import { HomeScreenSimulator } from './components/HomeScreenSimulator';
 import { CalculatorTool } from './components/tools/CalculatorTool';
 import { StopwatchTool } from './components/tools/StopwatchTool';
 import { FlashlightTool } from './components/tools/FlashlightTool';
@@ -97,6 +101,7 @@ export default function App() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Modals & Drawers State
+  const [qrSeedText, setQrSeedText] = useState<string>('');
   const [previewEntry, setPreviewEntry] = useState<ClipboardEntry | null>(null);
   const [editEntry, setEditEntry] = useState<ClipboardEntry | null>(null);
   const [isNewClipOpen, setIsNewClipOpen] = useState(false);
@@ -332,7 +337,14 @@ export default function App() {
         onOpenPermissions={() => setIsPermissionsOpen(true)}
         onOpenAndroidSource={() => setIsAndroidSourceOpen(true)}
         onToggleEdgePanel={() => setIsEdgeOpen(!isEdgeOpen)}
-        onToggleFloatingPanel={() => setIsFloatingOpen(!isFloatingOpen)}
+        onToggleFloatingPanel={() => {
+          const next = !isFloatingOpen;
+          setIsFloatingOpen(next);
+          handleSaveCustomization({
+            ...customization,
+            floatingConfig: { ...customization.floatingConfig, enabled: next },
+          });
+        }}
         theme={customization.theme === 'light' ? 'light' : 'dark'}
         onToggleTheme={() => {
           const next = customization.theme === 'dark' ? 'light' : 'dark';
@@ -343,7 +355,7 @@ export default function App() {
       />
 
       {/* Main View Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
         
         {/* Navigation Breadcrumb when viewing an individual tool */}
         {currentView !== 'dashboard' && (
@@ -601,12 +613,36 @@ export default function App() {
                         reloadFromDb();
                       }}
                       onShare={handleShareClip}
+                      onConvertToQr={(text) => {
+                        setQrSeedText(text);
+                        setCurrentView('qrgenerator');
+                      }}
                     />
                   );
                 })}
               </div>
             )}
           </div>
+        )}
+
+        {/* 2.5 BATTERY HEALTH & POWER VIEW */}
+        {currentView === 'battery' && <BatteryHealthTool />}
+
+        {/* 2.6 HOMESCREEN SIMULATION OVERLAY VIEW */}
+        {currentView === 'homescreen' && (
+          <HomeScreenSimulator
+            onOpenQuickPanel={() => setCurrentView('dashboard')}
+            onLaunchTool={(toolId) => setCurrentView(toolId as MainNavView)}
+            floatingEnabled={customization.floatingConfig.enabled && isFloatingOpen}
+            onToggleFloating={() => {
+              const next = !(customization.floatingConfig.enabled && isFloatingOpen);
+              setIsFloatingOpen(next);
+              handleSaveCustomization({
+                ...customization,
+                floatingConfig: { ...customization.floatingConfig, enabled: next },
+              });
+            }}
+          />
         )}
 
         {/* 3. SCREENSHOT TOOLS VIEW */}
@@ -630,7 +666,15 @@ export default function App() {
         {/* 9. STOPWATCH VIEW */}
         {currentView === 'stopwatch' && <StopwatchTool />}
 
-        {/* 10. QR SCANNER VIEW */}
+        {/* 10. QR GENERATOR VIEW */}
+        {currentView === 'qrgenerator' && (
+          <QrGeneratorTool 
+            initialText={qrSeedText}
+            onBackToDashboard={() => setCurrentView('dashboard')} 
+          />
+        )}
+
+        {/* 10.5. QR SCANNER VIEW */}
         {currentView === 'qrscanner' && <QrScannerTool />}
 
         {/* 11. APP SHORTCUTS VIEW */}
@@ -681,7 +725,10 @@ export default function App() {
 
       {/* Draggable Floating Button (TYPE_APPLICATION_OVERLAY) */}
       <FloatingQuickPanelButton
-        config={customization.floatingConfig}
+        config={{
+          ...customization.floatingConfig,
+          enabled: customization.floatingConfig.enabled && isFloatingOpen,
+        }}
         onUpdatePosition={(x, y) => {
           handleSaveCustomization({
             ...customization,
@@ -771,6 +818,26 @@ export default function App() {
 
       {/* Android 13+ Privacy Chip */}
       {clipboardSettings.showAndroidPrivacyChip && <AndroidPrivacyChip />}
+
+      {/* Mobile Persistent Bottom Quick Toggle Bar (Active on Every Screen on Phone) */}
+      <MobileBottomToggleBar
+        currentView={currentView}
+        onViewChange={(v) => {
+          setCurrentView(v);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        isFloatingOpen={isFloatingOpen}
+        onToggleFloating={() => {
+          const next = !isFloatingOpen;
+          setIsFloatingOpen(next);
+          handleSaveCustomization({
+            ...customization,
+            floatingConfig: { ...customization.floatingConfig, enabled: next },
+          });
+        }}
+        isEdgeOpen={isEdgeOpen}
+        onToggleEdge={() => setIsEdgeOpen(!isEdgeOpen)}
+      />
     </div>
   );
 }

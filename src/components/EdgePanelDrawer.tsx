@@ -18,7 +18,9 @@ import {
   Timer, 
   SlidersHorizontal,
   FileText,
-  Maximize2
+  Maximize2,
+  BatteryCharging,
+  QrCode
 } from 'lucide-react';
 import { ClipboardEntry, Collection } from '../types/clipboard';
 import { EdgePanelConfig, ToolId } from '../types/quickpanel';
@@ -229,6 +231,30 @@ export const EdgePanelDrawer: React.FC<EdgePanelDrawerProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
+              <button
+                onClick={() => {
+                  onToggle();
+                  onSelectTool('battery');
+                }}
+                className="p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-left transition-all space-y-1.5"
+              >
+                <BatteryCharging className="w-5 h-5 text-zinc-200" />
+                <div className="text-xs font-bold text-zinc-200">Battery Health</div>
+                <div className="text-[10px] text-zinc-500">Live Power Stats</div>
+              </button>
+
+              <button
+                onClick={() => {
+                  onToggle();
+                  onSelectTool('qrgenerator');
+                }}
+                className="p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 text-left transition-all space-y-1.5"
+              >
+                <QrCode className="w-5 h-5 text-zinc-200" />
+                <div className="text-xs font-bold text-zinc-200">QR Generator</div>
+                <div className="text-[10px] text-zinc-500">Clips to QR</div>
+              </button>
+
               <button
                 onClick={() => {
                   onToggle();
