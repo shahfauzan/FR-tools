@@ -3,9 +3,13 @@ name: FR SHAH QuickPanel CI
 on:
   push:
     branches: [ main, master, develop ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   web-build:
@@ -86,6 +90,29 @@ jobs:
           name: FR_SHAH_QuickPanel_Debug_APK
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: ignore
+
+      - name: Publish APK to GitHub Releases
+        if: steps.check_gradle.outputs.has_gradle == 'true' && github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v1.0.{0}', github.run_number) }}
+          name: ${{ github.ref_type == 'tag' && format('FR SHAH QuickPanel {0}', github.ref_name) || format('FR SHAH QuickPanel v1.0.{0}', github.run_number) }}
+          body: |
+            ### FR SHAH QuickPanel Android Release
+            **Build. Control. Customize.**
+            - Target Device: Moto G75 5G · Android 10-16
+            - Floating QuickPanel (TYPE_APPLICATION_OVERLAY)
+            - Edge Multitasker Drawer & Instant Launch Tools
+            - Room Database Smart Clipboard & QR Generator
+            - Real-time Battery Diagnostics
+
+            *DEVELOPER CREDIT: MADE BY FR SHAH*
+          files: app/build/outputs/apk/debug/*.apk
+          draft: false
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Architecture Deliverables
         if: steps.check_gradle.outputs.has_gradle != 'true'

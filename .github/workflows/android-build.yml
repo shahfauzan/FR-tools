@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - master
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - main
@@ -12,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android-build:
@@ -55,10 +57,57 @@ jobs:
         working-directory: ${{ steps.find-gradle.outputs.gradle_dir }}
         run: ./gradlew --no-daemon assembleDebug
 
-      - name: Upload APK
+      - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
         with:
           name: FR-tools-debug-apk
           path: '**/build/outputs/apk/**/*.apk'
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Prepare APK for GitHub Release
+        id: prepare-release
+        shell: bash
+        run: |
+          mkdir -p release-artifacts
+          APK_FILE=$(find . -type f -name "*.apk" | head -n 1)
+          if [ -n "$APK_FILE" ]; then
+            cp "$APK_FILE" release-artifacts/FR-SHAH-QuickPanel.apk
+            echo "has_apk=true" >> "$GITHUB_OUTPUT"
+            echo "Found APK: $APK_FILE -> copied to release-artifacts/FR-SHAH-QuickPanel.apk"
+          else
+            echo "has_apk=false" >> "$GITHUB_OUTPUT"
+            echo "No APK file detected to release."
+          fi
+
+      - name: Publish APK to GitHub Releases
+        if: steps.prepare-release.outputs.has_apk == 'true' && github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v1.0.{0}', github.run_number) }}
+          name: ${{ github.ref_type == 'tag' && format('FR SHAH QuickPanel {0}', github.ref_name) || format('FR SHAH QuickPanel v1.0.{0}', github.run_number) }}
+          body: |
+            ### FR SHAH QuickPanel Android APK Release
+            **Build. Control. Customize.**
+
+            #### 📱 Application Features:
+            - **Floating QuickPanel**: Draggable `TYPE_APPLICATION_OVERLAY` button with customizable opacity, size, and long-press shortcuts.
+            - **Swipe-Accessible Edge Panel**: Left/right edge multitasker drawer with quick clipboard and instant tool launch.
+            - **Smart Clipboard Manager**: Persistent Room Database history with auto-categorization and privacy filters.
+            - **QR Generator**: Convert copied text, links, and Wi-Fi credentials into high-resolution scannable QR codes.
+            - **Battery Health & Power Diagnostics**: Real-time cell temperature, voltage, 80% charge protection limit, and charging estimates.
+            - **System Utilities**: Flashlight with SOS strobe, Screenshot tools, MediaProjection Screen Recorder, Audio/Brightness controllers, Precision Stopwatch, and Offline Notes.
+
+            #### 🔧 Technical Specifications:
+            - **Target Device**: Moto G75 5G
+            - **Android Support**: Android 10 through Android 16 (API 29 - 36)
+            - **Architecture**: Kotlin 2.0 · Jetpack Compose (Material 3) · Room Database · MVVM
+
+            ---
+            *DEVELOPER CREDIT: MADE BY FR SHAH*
+          files: release-artifacts/FR-SHAH-QuickPanel.apk
+          draft: false
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
